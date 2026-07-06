@@ -1,0 +1,66 @@
+[build] wordfreq candidates after filter: 24365
+[build] cached=6993 to_fetch=17372
+[build] fetched 500/17372 (kept-so-far cache=7493)
+[build] fetched 1000/17372 (kept-so-far cache=7993)
+[build] fetched 1500/17372 (kept-so-far cache=8493)
+[build] fetched 2000/17372 (kept-so-far cache=8993)
+[build] fetched 2500/17372 (kept-so-far cache=9493)
+[build] fetched 3000/17372 (kept-so-far cache=9993)
+[build] fetched 3500/17372 (kept-so-far cache=10493)
+[build] fetched 4000/17372 (kept-so-far cache=10993)
+[build] fetched 4500/17372 (kept-so-far cache=11493)
+[build] fetched 5000/17372 (kept-so-far cache=11993)
+[build] fetched 5500/17372 (kept-so-far cache=12493)
+[build] fetched 6000/17372 (kept-so-far cache=12993)
+[build] fetched 6500/17372 (kept-so-far cache=13493)
+[build] fetched 7000/17372 (kept-so-far cache=13993)
+[build] fetched 7500/17372 (kept-so-far cache=14493)
+[build] fetched 8000/17372 (kept-so-far cache=14993)
+[build] fetched 8500/17372 (kept-so-far cache=15493)
+[build] fetched 9000/17372 (kept-so-far cache=15993)
+[build] fetched 9500/17372 (kept-so-far cache=16493)
+[build] fetched 10000/17372 (kept-so-far cache=16993)
+[build] fetched 10500/17372 (kept-so-far cache=17493)
+[build] fetched 11000/17372 (kept-so-far cache=17993)
+[build] fetched 11500/17372 (kept-so-far cache=18493)
+[build] fetched 12000/17372 (kept-so-far cache=18993)
+[build] fetched 12500/17372 (kept-so-far cache=19493)
+[build] fetched 13000/17372 (kept-so-far cache=19993)
+[build] fetched 13500/17372 (kept-so-far cache=20493)
+[build] fetched 14000/17372 (kept-so-far cache=20993)
+[build] fetched 14500/17372 (kept-so-far cache=21493)
+[build] fetched 15000/17372 (kept-so-far cache=21993)
+[build] fetched 15500/17372 (kept-so-far cache=22493)
+[build] fetched 16000/17372 (kept-so-far cache=22993)
+[build] fetched 16500/17372 (kept-so-far cache=23493)
+[build] fetched 17000/17372 (kept-so-far cache=23993)
+[build] kept=5665 drop_no_clue=18700
+[build] wrote 5665 words -> /Users/imangulov/Desktop/ru-anagram-daily/data/words_defs.json
+
+===== VERIFY words_defs.json =====
+path:        /Users/imangulov/Desktop/ru-anagram-daily/data/words_defs.json
+total words: 5665
+clue-count histogram (capped 12): {1: 766, 2: 453, 3: 353, 4: 389, 5: 303, 6: 282, 7: 248, 8: 249, 9: 223, 10: 213, 11: 187, 12: 1999}
+
+word-length histogram:
+   2:    121  ###
+   3:    398  ########
+   4:    763  ################
+   5:   1003  #####################
+   6:    921  ###################
+   7:    814  #################
+   8:    556  ############
+   9:    413  #########
+  10:    265  ######
+  11:    192  ####
+  12:     98  ##
+  13:     80  ##
+  14:     33  #
+  15:      8  #
+
+5 samples (high -> low freq):
+  НА freq=1.0 def='Древнеяпонское государственное образование.'
+  ЭТАЖ freq=0.5055 def='Его определяет номер кнопки в лифте.'
+  БАСКЕТБОЛ freq=0.44 def='Спортивная игра для переростков.'
+  СЕРАЯ freq=0.4 def='На какой реке стоит город Александров?'
+  ПРОФСОЮЗ freq=0.3691 def='Объединение рабочих для защиты своих интересов.'
