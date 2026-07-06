@@ -1,31 +1,77 @@
 <script>
   // ===========================================================================
-  // GAME SHELL — PLATFORM code, customized end screen for Anagram Daily (score
+  // GAME SHELL — PLATFORM code, customized end screen for Анаграмма дня (score
   // based: shows the score, reveals the three words, and a gated histogram).
   // ===========================================================================
-  import { onMount, onDestroy } from 'svelte';
+  import { onDestroy } from 'svelte';
+  import { afterNavigate } from '$app/navigation';
   import { base } from '$app/paths';
   import { GAME } from '$lib/game/index.js';
-  import { resolveDay, todayIndex, fmtDate, msUntilLocalMidnight } from '$lib/platform/days.js';
+  import {
+    resolveDay,
+    currentDay,
+    todayIndex,
+    fmtDate,
+    msUntilLocalMidnight
+  } from '$lib/platform/days.js';
   import { loadDay as loadRecord, saveDay } from '$lib/platform/storage.js';
   import { makeTimer, fmtTime } from '$lib/platform/timer.js';
   import { submitStart, submitFinish, fetchAgg, statsEnabled } from '$lib/platform/api.js';
   import { applyUnlockFromUrl } from '$lib/platform/unlock.js';
+  import AnimatedLogo from '$lib/AnimatedLogo.svelte';
 
   let dayIdx = $state(0);
   let puzzle = $state(null);
   let record = $state(null);
-  let view = $state('loading'); // loading | intro | play | end | empty
+  let view = $state('loading'); // loading | home | intro | play | end | empty
   let isFuture = $state(false);
   let agg = $state(null);
   let untilMidnight = $state('');
 
+  // Landing page (root URL, no ?day): today's puzzle index + its status.
+  let homeIdx = $state(0);
+  let homeStatus = $state('new'); // new | progress | done
+
   let timer = null;
   let tick = null;
 
-  onMount(() => {
+  function teardown() {
+    timer?.destroy();
+    timer = null;
+    if (tick) {
+      clearInterval(tick);
+      tick = null;
+    }
+  }
+
+  // Resolve the current URL into a view. Runs on first mount AND on every
+  // client-side navigation (afterNavigate), because landing ⇄ puzzle share the
+  // same route (only ?day changes) — SvelteKit does NOT remount then, so relying
+  // on onMount alone would leave the page stuck on the previous view.
+  function applyRoute() {
+    teardown();
+    activeMark = -1;
+    shared = '';
+    showPuzzle = false;
+    agg = null;
+    record = null;
+    puzzle = null;
+    isFuture = false;
+
     const unlocked = applyUnlockFromUrl();
-    const requested = new URLSearchParams(location.search).get('day');
+    const params = new URLSearchParams(location.search);
+    const requested = params.get('day');
+
+    // No ?day → landing page: today's puzzle plus a Play button.
+    if (requested === null) {
+      homeIdx = currentDay(new Date(), unlocked);
+      const rec = loadRecord(homeIdx);
+      homeStatus = rec.finished ? 'done' : rec.started ? 'progress' : 'new';
+      view = 'home';
+      return;
+    }
+
+    const autostart = params.get('start') === '1';
     dayIdx = resolveDay(requested, new Date(), unlocked);
     puzzle = GAME.loadDay(dayIdx);
     if (!puzzle) {
@@ -46,6 +92,10 @@
       submitStart(dayIdx);
       timer.start();
       view = 'play';
+    } else if (autostart) {
+      // Arrived via the landing "Играть" button: skip the intro card, but let the
+      // timer start on the first interaction (handleStart), same as beginPlay.
+      view = 'play';
     } else {
       view = 'intro';
     }
@@ -54,12 +104,10 @@
       untilMidnight = fmtTime(msUntilLocalMidnight());
     }, 1000);
     untilMidnight = fmtTime(msUntilLocalMidnight());
-  });
+  }
 
-  onDestroy(() => {
-    timer?.destroy();
-    if (tick) clearInterval(tick);
-  });
+  afterNavigate(() => applyRoute());
+  onDestroy(teardown);
 
   function persist() {
     saveDay(dayIdx, record);
@@ -162,15 +210,6 @@
       return { emoji, label, n };
     }).filter((row) => row.n > 0);
   }
-  // Big celebratory emoji, keyed to how well you scored (out of 20).
-  function resultEmoji(score) {
-    if (typeof score !== 'number' || Number.isNaN(score)) return '';
-    if (score >= 15) return '🐗🤯'.repeat(3);
-    if (score >= 10) return '🎊';
-    if (score >= 0.5) return '👍';
-    return ''; // сдались / 0 очков → ничего
-  }
-
   // Which mark's tooltip is open (tap to toggle on mobile; also shows on hover).
   let activeMark = $state(-1);
   function toggleMark(e, i) {
@@ -209,6 +248,39 @@
     <h1>На этот день задачи нет</h1>
     <p class="muted">Этот день пока недоступен. <a href="{base}/archive">Открыть архив →</a></p>
   </div>
+{:else if view === 'home'}
+  <div class="card home">
+    <div class="hero-logo"><AnimatedLogo fontSize="clamp(26px, 8vw, 40px)" link={false} /></div>
+    <p class="muted">{GAME.tagline}</p>
+
+    <a
+      class="primary bigbtn"
+      href="{base}/?day={homeIdx}{homeStatus === 'done' ? '' : '&start=1'}"
+    >
+      {homeStatus === 'done'
+        ? 'Показать результат'
+        : homeStatus === 'progress'
+          ? 'Продолжить'
+          : 'Играть'}
+    </a>
+
+    <p class="home-status">
+      {#if homeStatus === 'done'}
+        <span class="badge done">✓ Решено сегодня</span>
+      {:else if homeStatus === 'progress'}
+        <span class="badge progress">… В процессе</span>
+      {:else}
+        <span class="badge new">• Новая задача</span>
+      {/if}
+    </p>
+
+    <p class="home-day">День {homeIdx} · {fmtDate(homeIdx)}</p>
+
+    <div class="home-links">
+      <a href="{base}/archive">Архив →</a>
+      <a href="{base}/stats">Статистика →</a>
+    </div>
+  </div>
 {:else}
   <div class="daybar">
     <span class="daychip" class:future={isFuture}>
@@ -241,11 +313,11 @@
   {#if view === 'end'}
     <div class="card end">
       <h1>{record.result?.won ? '🎉 Разгадано!' : 'Сдались'}</h1>
-      {#if resultEmoji(record.result?.score)}
-        <div class="celebrate">{resultEmoji(record.result.score)}</div>
-      {/if}
       <div class="bigscore">
         {trimNum(record.result?.score)} <span>/ {record.result?.max ?? 20}</span>
+        {#if GAME.resultEmoji(record.result?.score)}
+          <span class="celebrate">{GAME.resultEmoji(record.result.score)}</span>
+        {/if}
       </div>
 
       {#if markLegend().length}
@@ -314,6 +386,7 @@
           {showPuzzle ? 'Скрыть задачу' : 'Показать задачу'}
         </button>
         <a class="ghost" href="{base}/stats">Вся статистика →</a>
+        <a class="ghost" href="{base}/archive">Архив →</a>
       </div>
       {#if shared}<p class="copied">{shared}</p>{/if}
 
@@ -368,8 +441,61 @@
     padding: 22px;
   }
   .intro,
-  .end {
+  .end,
+  .home {
     text-align: center;
+  }
+  .hero-logo {
+    margin: 6px 0 10px;
+  }
+  .bigbtn {
+    display: inline-block;
+    margin: 18px 0 10px;
+    text-decoration: none;
+    font-size: 18px;
+    padding: 12px 28px;
+  }
+  .badge {
+    font-family: var(--mono);
+    font-size: 13px;
+    border-radius: 999px;
+    padding: 3px 12px;
+    border: var(--border);
+  }
+  .badge.done {
+    background: color-mix(in srgb, var(--good) 22%, var(--surface));
+    color: var(--good);
+  }
+  .badge.progress {
+    background: color-mix(in srgb, var(--accent) 30%, var(--surface));
+  }
+  .badge.new {
+    background: var(--surface);
+    color: var(--accent-2);
+  }
+  .home-status {
+    margin: 0 0 12px;
+  }
+  .home-day {
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 13px;
+    margin: 0 0 16px;
+  }
+  .home-links {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    border-top: var(--border);
+    padding-top: 14px;
+  }
+  .home-links a {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .home-links a:hover {
+    text-decoration: underline;
   }
   h1 {
     margin: 0 0 8px;
@@ -410,6 +536,11 @@
   .ghost:hover {
     text-decoration: underline;
   }
+  .celebrate {
+    font-size: 24px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
   .bigscore {
     font-family: var(--mono);
     font-size: 44px;
@@ -419,11 +550,6 @@
   .bigscore span {
     font-size: 22px;
     color: var(--muted);
-  }
-  .celebrate {
-    font-size: 34px;
-    line-height: 1.1;
-    margin: 2px 0 6px;
   }
   .marks {
     font-size: 26px;
