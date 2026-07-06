@@ -49,14 +49,19 @@ export const GAME = {
     return '';
   },
 
-  // Rich, spoiler-free share block. `result.marks` is precomputed at finish
-  // time (clean solve / gave up / hint summary) by the scoring engine.
+  // Two-line, spoiler-free share (mirrors EN): URL on its own line first (so it
+  // unfurls as a link preview), then score + celebration emoji + hint tally.
+  //   <url>
+  //   #<day> -- <score>/<max> <celebration emoji> <hint-tally emojis>
+  // `result.marks` is precomputed at finish time (clean solve / gave up / hint
+  // summary) by the scoring engine.
   shareLine(result, dayIdx, url) {
     const s = trimNum(result?.score);
     const max = result?.max ?? MAX_SCORE;
     const emoji = this.resultEmoji(result?.score);
-    const head = `${GAME.title} #${dayIdx} -- ${s}/${max}`;
-    const line2 = [emoji, result?.marks || ''].filter(Boolean).join(' ');
-    return [head, line2, url].filter(Boolean).join('\n');
+    const parts = [`#${dayIdx} -- ${s}/${max}`];
+    if (emoji) parts.push(emoji);
+    if (result?.marks) parts.push(result.marks);
+    return `${url}\n${parts.join(' ')}`;
   }
 };
