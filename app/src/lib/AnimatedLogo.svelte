@@ -9,13 +9,13 @@
   // centered on the landing page instead of the header brand link).
   let { fontSize = '20px', link = true } = $props();
 
-  // Every phrase is the EXACT same letter multiset as the title (spaces AND
-  // commas are treated as gaps, not letters — see slotsOf). Verified anagrams.
+  // Every phrase is the EXACT same letter multiset as the title (spaces are the
+  // only non-letters — no commas, they'd render as ugly gap columns). Verified.
   const PHRASES = [
     'Анаграмма дня',
-    'Намана, грядма',
-    'Ня, мама наград',
-    'Гарна мадам, Ян',
+    'Намана грядма',
+    'Ня мама наград',
+    'Гарна мадам Ян',
     'мняд манарага'
   ];
   const HOLD = 1000; // ms static before each shuffle
@@ -23,17 +23,11 @@
 
   const COLS = Math.max(...PHRASES.map((p) => p.length)); // widest arrangement
 
-  // Non-letter positions (space, comma) are gaps: they still consume a column
-  // index so letters keep their spacing, but they are not rendered as tokens.
-  function isGap(ch) {
-    return ch === ' ' || ch === ',';
-  }
-
-  // Letters of a phrase, each with its column index (gaps skipped).
+  // Non-space letters of a phrase, each with its column index.
   function slotsOf(phrase) {
     const slots = [];
     [...phrase].forEach((ch, i) => {
-      if (!isGap(ch)) slots.push({ col: i, char: ch });
+      if (ch !== ' ') slots.push({ col: i, char: ch });
     });
     return slots;
   }
