@@ -1,8 +1,12 @@
-# Cloudflare Worker config for the daily Anagram global-stats backend.
-# Deploy:
-#   wrangler d1 create anagram-stats      # paste database_id below
-#   wrangler d1 execute anagram-stats --remote --file=schema.sql
-#   wrangler deploy
+# =====================================================================
+# DO NOT DEPLOY FROM HERE. The RU game reuses the ENGLISH anagram-stats
+# worker + D1 (see app/src/lib/config.js STATS_API). This file is a copy
+# of anagram-daily/backend and points at that same worker + database_id
+# below, so `wrangler deploy` here would REDEPLOY the English worker.
+# RU rows stay separate via the stats game key 'ru-anagram-daily'.
+# Only touch this file if you decide to split RU onto its own worker
+# (then rename `name` and create a fresh D1 database).
+# =====================================================================
 
 name = "anagram-stats"
 main = "src/index.js"
